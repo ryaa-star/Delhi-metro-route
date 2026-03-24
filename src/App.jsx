@@ -90,6 +90,10 @@ export default function App() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState("");
 
+  const [darkMode, setDarkMode] = useState(false);
+
+  const [favourites, setFavourites] = useState([]);
+
   const fromSuggestions = fromInput.length > 0
     ? allStations.filter(s => s.toLowerCase().includes(fromInput.toLowerCase())).slice(0, 5)
     : [];
@@ -117,10 +121,43 @@ export default function App() {
     }
   };
 
+  const saveFavourite = () => {
+    if (!from || !to) return;
+    const already = favourites.find(f => f.from === from && f.to === to);
+    if (already) { alert("Already in favourites!"); return; }
+    setFavourites([...favourites, { from, to }]);
+  };
+
+  const removeFavourite = (index) => {
+    const updated = favourites.filter((_, i) => i !== index);
+    setFavourites(updated);
+  };
+
+  const loadFavourite = (fav) => {
+    setFrom(fav.from);
+    setFromInput(fav.from);
+    setTo(fav.to);
+    setToInput(fav.to);
+    setResult(null);
+    setError("");
+  };
+
   const totalStops = result ? result.reduce((sum, seg) => sum + seg.stations.length - 1, 0) : 0;
 
+  const bg = darkMode ? "#1a1a2e" : "#f0f4f8";
+  const cardBg = darkMode ? "#16213e" : "#fff";
+  const cardBorder = darkMode ? "#0f3460" : "#ddd";
+  const textColor = darkMode ? "#e0e0e0" : "#111";
+  const mutedColor = darkMode ? "#aaa" : "#888";
+  const inputBg = darkMode ? "#0f3460" : "#fff";
+  const inputBorder = darkMode ? "#1a4a8a" : "#ccc";
+  const inputColor = darkMode ? "#fff" : "#222";
+  const dropBg = darkMode ? "#16213e" : "#fff";
+  const dropBorder = darkMode ? "#0f3460" : "#ccc";
+  const dropHover = darkMode ? "#0f3460" : "#f0f0f0";
+
   return (
-    <div style={{ fontFamily: "Arial, sans-serif", minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f0f4f8" }}>
+    <div style={{ fontFamily: "Arial, sans-serif", minHeight: "100vh", display: "flex", flexDirection: "column", background: bg }}>
 
       <header>
         <div style={{ background: "#002460", padding: "4px 20px", fontSize: 11, color: "#aac4ff", display: "flex", justifyContent: "space-between" }}>
@@ -133,6 +170,11 @@ export default function App() {
             <div style={{ color: "#fff", fontWeight: 800, fontSize: 20, letterSpacing: 1 }}>DELHI METRO</div>
             <div style={{ color: "#aac4ff", fontSize: 11, letterSpacing: 2 }}>ROUTE FINDER</div>
           </div>
+          <button
+            onClick={() => setDarkMode(!darkMode)}
+            style={{ marginLeft: "auto", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 20, padding: "6px 14px", color: "#fff", cursor: "pointer", fontSize: 13 }}>
+            {darkMode ? "☀️ Light" : "🌙 Dark"}
+          </button>
         </div>
         <div style={{ background: "#002f70", borderTop: "1px solid rgba(255,255,255,0.1)", padding: "0 20px", display: "flex", gap: 24 }}>
           {["Route Finder", "Metro Map", "Fare Info", "Contact Us"].map((item, i) => (
@@ -149,15 +191,15 @@ export default function App() {
       </header>
 
       <main style={{ flex: 1 }}>
-        <div style={{ fontFamily: "Arial, sans-serif", maxWidth: 480, margin: "32px auto", padding: 20, background: "#fff", borderRadius: 8, boxShadow: "0 2px 12px rgba(0,0,0,0.08)" }}>
+        <div style={{ maxWidth: 480, margin: "32px auto", padding: 20, background: cardBg, borderRadius: 8, boxShadow: "0 2px 12px rgba(0,0,0,0.08)", border: `1px solid ${cardBorder}` }}>
 
           <h1 style={{ color: "#1565C0", textAlign: "center", marginBottom: 4 }}>🚇 Delhi Metro</h1>
-          <p style={{ textAlign: "center", color: "#888", marginTop: 0, marginBottom: 24, fontSize: 14 }}>
+          <p style={{ textAlign: "center", color: mutedColor, marginTop: 0, marginBottom: 24, fontSize: 14 }}>
             Find your route
           </p>
 
           <div style={{ marginBottom: 14, position: "relative" }}>
-            <label style={{ display: "block", marginBottom: 5, fontWeight: "bold", fontSize: 14 }}>From:</label>
+            <label style={{ display: "block", marginBottom: 5, fontWeight: "bold", fontSize: 14, color: textColor }}>From:</label>
             <input
               type="text"
               value={fromInput}
@@ -165,13 +207,15 @@ export default function App() {
               onFocus={() => setShowFromDrop(true)}
               onBlur={() => setTimeout(() => setShowFromDrop(false), 150)}
               placeholder="e.g. Rajiv Chowk"
-              style={{ width: "100%", padding: 10, fontSize: 15, border: "1px solid #ccc", borderRadius: 6, boxSizing: "border-box" }}
+              style={{ width: "100%", padding: 10, fontSize: 15, border: `1px solid ${inputBorder}`, borderRadius: 6, boxSizing: "border-box", background: inputBg, color: inputColor }}
             />
             {showFromDrop && fromSuggestions.length > 0 && (
-              <ul style={{ position: "absolute", background: "#fff", border: "1px solid #ccc", borderRadius: 6, width: "100%", margin: 0, padding: 0, listStyle: "none", zIndex: 10, boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}>
+              <ul style={{ position: "absolute", background: dropBg, border: `1px solid ${dropBorder}`, borderRadius: 6, width: "100%", margin: 0, padding: 0, listStyle: "none", zIndex: 10, boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}>
                 {fromSuggestions.map(s => (
                   <li key={s} onMouseDown={() => { setFrom(s); setFromInput(s); setShowFromDrop(false); }}
-                    style={{ padding: "9px 12px", cursor: "pointer", borderBottom: "1px solid #f0f0f0", fontSize: 14 }}>
+                    style={{ padding: "9px 12px", cursor: "pointer", borderBottom: `1px solid ${dropBorder}`, fontSize: 14, color: textColor }}
+                    onMouseEnter={e => e.currentTarget.style.background = dropHover}
+                    onMouseLeave={e => e.currentTarget.style.background = dropBg}>
                     {s}
                   </li>
                 ))}
@@ -180,7 +224,7 @@ export default function App() {
           </div>
 
           <div style={{ marginBottom: 18, position: "relative" }}>
-            <label style={{ display: "block", marginBottom: 5, fontWeight: "bold", fontSize: 14 }}>To:</label>
+            <label style={{ display: "block", marginBottom: 5, fontWeight: "bold", fontSize: 14, color: textColor }}>To:</label>
             <input
               type="text"
               value={toInput}
@@ -188,13 +232,15 @@ export default function App() {
               onFocus={() => setShowToDrop(true)}
               onBlur={() => setTimeout(() => setShowToDrop(false), 150)}
               placeholder="e.g. Hauz Khas"
-              style={{ width: "100%", padding: 10, fontSize: 15, border: "1px solid #ccc", borderRadius: 6, boxSizing: "border-box" }}
+              style={{ width: "100%", padding: 10, fontSize: 15, border: `1px solid ${inputBorder}`, borderRadius: 6, boxSizing: "border-box", background: inputBg, color: inputColor }}
             />
             {showToDrop && toSuggestions.length > 0 && (
-              <ul style={{ position: "absolute", background: "#fff", border: "1px solid #ccc", borderRadius: 6, width: "100%", margin: 0, padding: 0, listStyle: "none", zIndex: 10, boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}>
+              <ul style={{ position: "absolute", background: dropBg, border: `1px solid ${dropBorder}`, borderRadius: 6, width: "100%", margin: 0, padding: 0, listStyle: "none", zIndex: 10, boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}>
                 {toSuggestions.map(s => (
                   <li key={s} onMouseDown={() => { setTo(s); setToInput(s); setShowToDrop(false); }}
-                    style={{ padding: "9px 12px", cursor: "pointer", borderBottom: "1px solid #f0f0f0", fontSize: 14 }}>
+                    style={{ padding: "9px 12px", cursor: "pointer", borderBottom: `1px solid ${dropBorder}`, fontSize: 14, color: textColor }}
+                    onMouseEnter={e => e.currentTarget.style.background = dropHover}
+                    onMouseLeave={e => e.currentTarget.style.background = dropBg}>
                     {s}
                   </li>
                 ))}
@@ -202,17 +248,43 @@ export default function App() {
             )}
           </div>
 
-          <button onClick={handleSearch}
-            style={{ width: "100%", padding: 12, background: "#1565C0", color: "#fff", border: "none", borderRadius: 6, fontSize: 16, cursor: "pointer", fontWeight: "bold" }}>
-            Search Route
-          </button>
+          <div style={{ display: "flex", gap: 8, marginBottom: 0 }}>
+            <button onClick={handleSearch}
+              style={{ flex: 1, padding: 12, background: "#1565C0", color: "#fff", border: "none", borderRadius: 6, fontSize: 16, cursor: "pointer", fontWeight: "bold" }}>
+              Search Route
+            </button>
+            {/* ── NEW: save favourite button */}
+            <button onClick={saveFavourite}
+              style={{ padding: "12px 14px", background: from && to ? "#FFF3CD" : "#f5f5f5", border: "1px solid #F5A800", borderRadius: 6, fontSize: 18, cursor: "pointer" }}
+              title="Save to favourites">
+              #
+            </button>
+          </div>
 
           {error && (
             <p style={{ color: "red", textAlign: "center", marginTop: 12, fontSize: 14 }}>{error}</p>
           )}
 
+          {/* ── NEW: Favourites section */}
+          {favourites.length > 0 && (
+            <div style={{ marginTop: 20, borderTop: `1px solid ${cardBorder}`, paddingTop: 14 }}>
+              <p style={{ fontWeight: "bold", fontSize: 13, color: textColor, marginBottom: 8 }}>⭐ Saved Routes</p>
+              {favourites.map((fav, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 10px", background: darkMode ? "#0f3460" : "#f9f9f9", borderRadius: 6, marginBottom: 6, border: `1px solid ${cardBorder}` }}>
+                  <span style={{ fontSize: 13, color: textColor, cursor: "pointer" }} onClick={() => loadFavourite(fav)}>
+                    {fav.from} → {fav.to}
+                  </span>
+                  <button onClick={() => removeFavourite(i)}
+                    style={{ background: "none", border: "none", color: "#E63946", cursor: "pointer", fontSize: 16, padding: "0 4px" }}>
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
           {result && (
-            <div style={{ marginTop: 24, border: "1px solid #ddd", borderRadius: 8, overflow: "hidden" }}>
+            <div style={{ marginTop: 24, border: `1px solid ${cardBorder}`, borderRadius: 8, overflow: "hidden" }}>
               <div style={{ background: "#1565C0", color: "#fff", padding: "10px 14px", fontSize: 14 }}>
                 Route found! — {totalStops} stops &nbsp;|&nbsp; ~{totalStops * 2} min
               </div>
@@ -235,7 +307,7 @@ export default function App() {
                               borderRadius: "50%", background: isEnd ? lines[seg.lineKey].color : "#ccc",
                               flexShrink: 0, marginLeft: -6
                             }} />
-                            <span style={{ fontSize: isEnd ? 14 : 13, fontWeight: isEnd ? "bold" : "normal", color: isEnd ? "#111" : "#777" }}>
+                            <span style={{ fontSize: isEnd ? 14 : 13, fontWeight: isEnd ? "bold" : "normal", color: isEnd ? textColor : mutedColor }}>
                               {st}
                             </span>
                           </div>
@@ -244,7 +316,7 @@ export default function App() {
                     </div>
 
                     {si < result.length - 1 && (
-                      <p style={{ fontSize: 13, color: "#888", marginLeft: 8, marginTop: 6 }}>
+                      <p style={{ fontSize: 13, color: mutedColor, marginLeft: 8, marginTop: 6 }}>
                         ↓ Change to <span style={{ color: lines[result[si + 1].lineKey].color, fontWeight: "bold" }}>{lines[result[si + 1].lineKey].name}</span>
                       </p>
                     )}
@@ -272,8 +344,8 @@ export default function App() {
           </div>
           <div>
             <div style={{ color: "#fff", fontWeight: 700, marginBottom: 6 }}>INFO</div>
-            <div> Metro Timing: 5:30 AM –11:30 PM</div>
-            <div style={{ marginTop: 4 }}> New Delhi, India</div>
+            <div>Metro Timing: 5:30 AM – 11:30 PM</div>
+            <div style={{ marginTop: 4 }}>New Delhi, India</div>
           </div>
         </div>
         <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: 12, textAlign: "center" }}>
